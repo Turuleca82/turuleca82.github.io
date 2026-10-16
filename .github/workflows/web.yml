@@ -1,12 +1,16 @@
-name: GymPlan web (iPhone)
+name: Publicar GymPlan
 
-# Compila la version web de GymPlan y la publica en la rama gh-pages.
-# GitHub Pages sirve esa rama (Settings -> Pages -> Deploy from a branch ->
-# gh-pages / root).
+# Compila la app (carpeta app/) y publica la version lista para usar:
+# - en la raiz de la rama main (lo que GitHub Pages sirve por defecto), y
+# - en la rama gh-pages.
+# Asi la pagina funciona con cualquiera de las dos opciones de Pages.
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'app/**'
+      - '.github/workflows/web.yml'
   workflow_dispatch:
 
 permissions:
@@ -26,16 +30,16 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: package-lock.json
-
-      - name: Instalar dependencias
-        run: npm ci
+          cache-dependency-path: app/package-lock.json
 
       - name: Compilar
-        run: npm run build
+        working-directory: app
+        run: |
+          npm ci
+          npm run build
 
       - name: Publicar en la rama gh-pages
-        working-directory: dist
+        working-directory: app/dist
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -46,3 +50,16 @@ jobs:
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -q -m "Publicar GymPlan web (${GITHUB_SHA::7})"
           git push -q -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+          rm -rf .git
+
+      - name: Publicar en la raiz de main
+        run: |
+          # Borrar la version publicada anterior (todo menos el codigo y la config).
+          find . -mindepth 1 -maxdepth 1 ! -name app ! -name .github ! -name .git ! -name README.md -exec rm -rf {} +
+          cp -r app/dist/. .
+          rm -rf app/dist app/node_modules
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Publicar GymPlan web (${GITHUB_SHA::7})"
+          git push -q origin HEAD:main

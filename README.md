@@ -41,14 +41,19 @@ de varios días sin uso: instalala en la pantalla de inicio.
 
 ## Desarrollo
 
+El código está en `app/`:
+
 ```bash
+cd app
 npm install
 npm run dev     # abre la app en el navegador
-npm run build   # genera dist/
+npm run build   # genera app/dist/
 ```
 
-Cada push a `main` compila la app y la publica en la rama `gh-pages`
-(`.github/workflows/web.yml`).
+Cada cambio en `app/` se compila solo y la versión lista para usar se publica
+en la raíz de `main` y en la rama `gh-pages`
+(`.github/workflows/web.yml`). Los archivos de la raíz (`index.html`,
+`assets/`, etc.) los genera ese proceso: no se editan a mano.
 
 Imágenes de ejercicios: [free-exercise-db](https://github.com/yuhonas/free-exercise-db)
 (dominio público).
