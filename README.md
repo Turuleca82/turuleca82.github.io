@@ -15,6 +15,16 @@ Queda con su ícono, a pantalla completa, y funciona sin conexión una vez
 abierta. En Android también se puede instalar desde Chrome (menú →
 *Instalar app* / *Agregar a la pantalla principal*).
 
+## Instalarla en Android (APK)
+
+Descargá el APK desde el celular:
+<https://github.com/Turuleca82/turuleca82.github.io/releases/download/apk/GymPlan.apk>
+
+Abrilo para instalarlo. La primera vez Android pide permitir instalar apps
+desde el navegador (*Permitir desde esta fuente*); si aparece Play Protect,
+tocá *Más detalles → Instalar de todas formas*. No hace falta cuenta de
+GitHub.
+
 ## API key de Gemini
 
 Para generar planes hace falta una API key gratuita de Google AI Studio:

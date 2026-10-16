@@ -1,0 +1,68 @@
+name: APK para Android
+
+# Compila la app (carpeta app/) como APK de Android y la publica en la
+# release "apk", con un link de descarga fijo:
+# https://github.com/Turuleca82/turuleca82.github.io/releases/download/apk/GymPlan.apk
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - '.github/workflows/apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # ubuntu-latest ya trae el Android SDK (ANDROID_HOME) con las licencias aceptadas.
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar la web app
+        run: npm run build
+
+      - name: Generar proyecto Android
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Compilar APK
+        working-directory: app/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Renombrar APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk GymPlan.apk
+
+      - name: Publicar en la release "apk"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view apk >/dev/null 2>&1; then
+            gh release create apk --title "GymPlan para Android" --notes "Descargá GymPlan.apk desde el celular y abrilo para instalarlo. Si Android pregunta, permití instalar apps desde el navegador (Chrome) y, si aparece Play Protect, tocá Más detalles → Instalar de todas formas."
+          fi
+          gh release upload apk GymPlan.apk --clobber
