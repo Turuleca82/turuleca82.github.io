@@ -51,12 +51,42 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      # Firma fija: la clave esta guardada en el secreto ANDROID_KEYSTORE
+      # (archivo .p12 en base64). Con la misma firma, cada version nueva se
+      # instala encima de la anterior sin borrar los datos. Sin el secreto se
+      # usa una clave temporal (sirve para instalar, no para actualizar).
+      - name: Preparar firma
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/gymplan.p12"
+          else
+            echo "::warning::Falta el secreto ANDROID_KEYSTORE: el APK se firma con una clave temporal y no va a poder actualizar una version anterior."
+            keytool -genkeypair -storetype PKCS12 -keystore "$RUNNER_TEMP/gymplan.p12" -storepass gymplan-firma \
+              -keypass gymplan-firma -alias gymplan -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=GymPlan"
+          fi
+
+      # versionCode creciente: Android no deja instalar una version "anterior".
+      - name: Numero de version
+        working-directory: app/android/app
+        run: |
+          sed -i -E "s/versionCode [0-9]+/versionCode $((100 + GITHUB_RUN_NUMBER))/; s/versionName \"[^\"]*\"/versionName \"1.$GITHUB_RUN_NUMBER\"/" build.gradle
+          grep -E "versionCode|versionName" build.gradle
+
       - name: Compilar APK
         working-directory: app/android
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          ./gradlew assembleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/gymplan.p12" \
+            -Pandroid.injected.signing.store.password=gymplan-firma \
+            -Pandroid.injected.signing.key.alias=gymplan \
+            -Pandroid.injected.signing.key.password=gymplan-firma
 
-      - name: Renombrar APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk GymPlan.apk
+      - name: Renombrar APK y mostrar la firma
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk GymPlan.apk
+          "$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner" verify --print-certs GymPlan.apk | grep -i "SHA-256"
 
       - name: Publicar en la release "apk"
         env:
