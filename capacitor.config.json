@@ -1,0 +1,8 @@
+{
+  "appId": "io.github.turuleca82.gymplan",
+  "appName": "GymPlan",
+  "webDir": "dist",
+  "plugins": {
+    "CapacitorHttp": { "enabled": true }
+  }
+}
