@@ -18,7 +18,8 @@ abierta. En Android también se puede instalar desde Chrome (menú →
 ## Instalarla en Android (APK)
 
 Descargá el APK desde el celular:
-<https://github.com/Turuleca82/turuleca82.github.io/releases/download/apk/GymPlan.apk>
+<https://turuleca82.github.io/GymPlan.apk>
+(también está en <https://github.com/Turuleca82/turuleca82.github.io/releases/download/apk/GymPlan.apk>)
 
 Abrilo para instalarlo. La primera vez Android pide permitir instalar apps
 desde el navegador (*Permitir desde esta fuente*); si aparece Play Protect,

@@ -4,6 +4,8 @@ name: Publicar GymPlan
 # - en la raiz de la rama main (lo que GitHub Pages sirve por defecto), y
 # - en la rama gh-pages.
 # Asi la pagina funciona con cualquiera de las dos opciones de Pages.
+# Incluye el ultimo APK (GymPlan.apk) para descargarlo desde la misma pagina;
+# por eso tambien corre cuando termina la compilacion del APK.
 
 on:
   push:
@@ -11,6 +13,9 @@ on:
     paths:
       - 'app/**'
       - '.github/workflows/web.yml'
+  workflow_run:
+    workflows: ['APK para Android']
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -37,6 +42,11 @@ jobs:
         run: |
           npm ci
           npm run build
+
+      - name: Incluir el APK
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release download apk --pattern GymPlan.apk --dir app/dist --clobber || echo "::warning::No se encontro el APK publicado"
 
       - name: Publicar en la rama gh-pages
         working-directory: app/dist
